@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Step 2 - Enter Details</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body class="bg-gray-100 p-6">
+
+  <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+    <h2 class="text-2xl font-bold mb-4">Enter Your Details</h2>
+
+    <div class="grid grid-cols-1 gap-4">
+      <input type="text" id="name" class="border p-2 rounded" placeholder="Full Name" />
+      <input type="tel" id="phone" class="border p-2 rounded" placeholder="Phone Number" />
+      <input type="email" id="email" class="border p-2 rounded" placeholder="Email" />
+
+      <button
+        onclick="payNow()"
+        class="bg-green-600 text-white py-2 rounded hover:bg-green-700 mt-4"
+      >
+        Pay Now
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const bookingDetails = {
+      checkin: params.get('checkin'),
+      checkout: params.get('checkout'),
+      roomType: params.get('roomType'),
+      rooms: params.get('rooms'),
+      guests: params.get('guests')
+    };
+
+    function payNow() {
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+      const email = document.getElementById("email").value;
+
+      if (!name || !phone || !email) {
+        alert("Please fill all details");
+        return;
+      }
+
+      const options = {
+        key: "rzp_test_YOURKEYHERE", // Replace with your Razorpay Test Key
+        amount: 10000, // amount in paise = ₹100
+        currency: "INR",
+        name: "Hotel MG Grand",
+        description: "Hotel Booking",
+        handler: function (response) {
+          alert("Payment Successful! ID: " + response.razorpay_payment_id);
+          
+          // Send booking details and customer information to Google Sheets
+          const paymentStatus = "Success";
+          const bookingData = {
+            ...bookingDetails,
+            name,
+            phone,
+            email,
+            paymentStatus
+          };
+
+          // Send data to Google Sheets (via Google Apps Script)
+          sendToGoogleSheets(bookingData);
+        },
+        prefill: {
+          name: name,
+          email: email,
+          contact: phone
+        },
+        notes: {
+          ...bookingDetails
+        },
+        theme: {
+          color: "#0f766e"
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    }
+
+    async function sendToGoogleSheets(bookingData) {
+      try {
+        const response = await fetch("YOUR_GOOGLE_SCRIPT_URL", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(bookingData)
+        });
+
+        if (response.ok) {
+          console.log("Booking details saved to Google Sheets!");
+        } else {
+          console.error("Error saving to Google Sheets");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Failed to save data. Please try again.");
+      }
+    }
+  </script>
+
+</body>
+</html>
