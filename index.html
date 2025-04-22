@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Step 1 - Hotel Booking</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .selected {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+    }
+    .room-card img {
+      height: 250px; /* Adjust the height of images */
+      object-fit: cover; /* Make images fill the space without distortion */
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-6">
+
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+    <h2 class="text-3xl font-bold mb-6 text-center">Book Your Stay</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div>
+        <label class="block font-semibold mb-1">Check-in Date</label>
+        <input type="date" id="checkin" class="w-full border rounded-lg px-3 py-2" />
+      </div>
+      <div>
+        <label class="block font-semibold mb-1">Check-out Date</label>
+        <input type="date" id="checkout" class="w-full border rounded-lg px-3 py-2" />
+      </div>
+    </div>
+
+    <h3 class="text-xl font-semibold mb-4">Choose Your Room</h3>
+    <div class="grid md:grid-cols-2 gap-6 mb-6" id="roomOptions">
+      <!-- Room Cards (Only 2 Rooms) -->
+      <div onclick="selectRoom('standard')" id="standard" class="room-card cursor-pointer border-2 rounded-lg overflow-hidden">
+        <img src="https://via.placeholder.com/300x200?text=Standard+Room" class="w-full" />
+        <div class="p-3">
+          <h4 class="font-bold text-lg">Standard Room</h4>
+          <p class="text-sm text-gray-600">Cozy and affordable</p>
+        </div>
+      </div>
+
+      <div onclick="selectRoom('deluxe')" id="deluxe" class="room-card cursor-pointer border-2 rounded-lg overflow-hidden">
+        <img src="https://via.placeholder.com/300x200?text=Deluxe+Room" class="w-full" />
+        <div class="p-3">
+          <h4 class="font-bold text-lg">Deluxe Room</h4>
+          <p class="text-sm text-gray-600">Spacious with great amenities</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <input type="number" id="rooms" class="border p-2 rounded" placeholder="Number of Rooms" value="1" />
+      <input type="number" id="guests" class="border p-2 rounded" placeholder="Number of Guests" value="1" />
+    </div>
+
+    <div class="text-center">
+      <button
+        onclick="goToNextPage()"
+        class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700"
+      >
+        Book Now
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let selectedRoomType = "";
+
+    function selectRoom(type) {
+      selectedRoomType = type;
+
+      // Remove selection highlight from all
+      document.querySelectorAll("#roomOptions > div").forEach(card => {
+        card.classList.remove("selected");
+      });
+
+      // Highlight selected
+      document.getElementById(type).classList.add("selected");
+    }
+
+    function goToNextPage() {
+      const checkin = document.getElementById("checkin").value;
+      const checkout = document.getElementById("checkout").value;
+      const rooms = document.getElementById("rooms").value;
+      const guests = document.getElementById("guests").value;
+
+      if (!checkin || !checkout || !selectedRoomType) {
+        alert("Please fill all fields and select a room type.");
+        return;
+      }
+
+      const query = new URLSearchParams({
+        checkin,
+        checkout,
+        roomType: selectedRoomType,
+        rooms,
+        guests
+      }).toString();
+
+      window.location.href = `step2.html?${query}`;
+    }
+  </script>
+
+</body>
+</html>
