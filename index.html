@@ -79,7 +79,7 @@
       apiKey: "AIzaSyD3niixQAI4w1GwTDarW9UaG__l2MLqSb8",
       authDomain: "hotel-booking-aa81d.firebaseapp.com",
       projectId: "hotel-booking-aa81d",
-      storageBucket: "hotel-booking-aa81d.firebasestorage.app",
+      storageBucket: "hotel-booking-aa81d.appspot.com",
       messagingSenderId: "154067773046",
       appId: "1:154067773046:web:16160d4a19222066d0e157",
       measurementId: "G-PDW0MFJL2V"
@@ -87,6 +87,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    // Replace this with your deployed Google Apps Script Web App URL
+    const googleAppsScriptUrl = "https://script.google.com/macros/s/AKfycbw-iGsMvU3AEyC4I8XzS_0cK09Jc2ctfHchiSHroCTZs3_J81wvdJ_MoWkjZCCpnnL2/exec";
 
     window.submitBooking = async function(paymentMethod) {
       const bookingDetails = {
@@ -99,23 +102,44 @@
         phone: document.getElementById("phone").value.trim(),
         email: document.getElementById("email").value.trim(),
         paymentMethod,
-        timestamp: serverTimestamp()
+        timestamp: new Date().toISOString()
       };
 
-      // Simple validation
+      // Validation
       for (let key in bookingDetails) {
-        if (bookingDetails[key] === "") {
+        if (!bookingDetails[key]) {
           alert("Please fill all fields.");
           return;
         }
       }
 
       try {
-        await addDoc(collection(db, "bookings"), bookingDetails);
-        alert("Booking successful!");
-        window.location.href = "thankyou.html";
+        // Save to Firestore
+        await addDoc(collection(db, "bookings"), {
+          ...bookingDetails,
+          timestamp: serverTimestamp()
+        });
+        console.log("Saved to Firebase");
+
+        // Send to Google Sheet
+        const response = await fetch(googleAppsScriptUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(bookingDetails)
+        });
+
+        const result = await response.json();
+
+        if (result.result === "success") {
+          alert("Booking successful!");
+          window.location.href = "thankyou.html"; // Redirect to thank you page
+        } else {
+          alert("Booking saved to Firebase, but failed to update Google Sheet.");
+        }
       } catch (err) {
-        console.error("Error saving booking:", err);
+        console.error("Booking error:", err);
         alert("Booking failed. Please try again.");
       }
     };
