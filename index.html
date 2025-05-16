@@ -88,58 +88,34 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Replace this with your deployed Google Apps Script Web App URL
-    const googleAppsScriptUrl = "https://script.google.com/macros/s/AKfycbw-iGsMvU3AEyC4I8XzS_0cK09Jc2ctfHchiSHroCTZs3_J81wvdJ_MoWkjZCCpnnL2/exec";
-
     window.submitBooking = async function(paymentMethod) {
       const bookingDetails = {
         checkin: document.getElementById("checkin").value,
         checkout: document.getElementById("checkout").value,
         roomType: document.getElementById("roomType").value,
-        rooms: document.getElementById("rooms").value,
-        guests: document.getElementById("guests").value,
+        rooms: Number(document.getElementById("rooms").value),
+        guests: Number(document.getElementById("guests").value),
         name: document.getElementById("name").value.trim(),
         phone: document.getElementById("phone").value.trim(),
         email: document.getElementById("email").value.trim(),
         paymentMethod,
-        timestamp: new Date().toISOString()
+        timestamp: serverTimestamp()
       };
 
       // Validation
       for (let key in bookingDetails) {
-        if (!bookingDetails[key]) {
+        if (!bookingDetails[key] && bookingDetails[key] !== 0) {
           alert("Please fill all fields.");
           return;
         }
       }
 
       try {
-        // Save to Firestore
-        await addDoc(collection(db, "bookings"), {
-          ...bookingDetails,
-          timestamp: serverTimestamp()
-        });
-        console.log("Saved to Firebase");
-
-        // Send to Google Sheet
-        const response = await fetch(googleAppsScriptUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(bookingDetails)
-        });
-
-        const result = await response.json();
-
-        if (result.result === "success") {
-          alert("Booking successful!");
-          window.location.href = "thankyou.html"; // Redirect to thank you page
-        } else {
-          alert("Booking saved to Firebase, but failed to update Google Sheet.");
-        }
+        await addDoc(collection(db, "bookings"), bookingDetails);
+        alert("Booking successful!");
+        window.location.href = "thankyou.html"; // Redirect after success
       } catch (err) {
-        console.error("Booking error:", err);
+        console.error("Booking failed:", err);
         alert("Booking failed. Please try again.");
       }
     };
